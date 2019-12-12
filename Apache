@@ -7,7 +7,7 @@ ls -ltrh /etc/init.d/
 apachectl graceful
 
 
-Ls -lh /etc/apache2/sites-available/
+ls -lh /etc/apache2/sites-available/
 
 ls -lh /etc/apache2/sites-enabled/
 

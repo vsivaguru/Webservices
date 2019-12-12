@@ -1,0 +1,60 @@
+#Voir le vhost
+apachectl -S
+
+#demarrage de scripte nodejs
+ls -ltrh /etc/init.d/
+
+apachectl graceful
+
+
+Ls -lh /etc/apache2/sites-available/
+
+ls -lh /etc/apache2/sites-enabled/
+
+
+root@clatoo-ew01:/etc/apache2/sites-available# cat onevision-preprod.conf
+<VirtualHost *:80>
+  ServerName onevision-preprod.adm.fr.clara.net
+  ServerAlias ticketing-preprod.adm.fr.clara.net
+
+#100.64.5.7 est un nat depuis le réseau runiso pour acceder infra claranet rennes, voir avec ipplan  
+ServerAlias 100.64.5.7
+
+  RewriteEngine On
+  RewriteCond %{REQUEST_URI}  ^/socket.io            [NC]
+  RewriteCond %{QUERY_STRING} transport=websocket    [NC]
+  RewriteRule /(.*)           ws://localhost:9105/$1 [P,L]
+
+  ProxyPass / http://localhost:9105/
+  ProxyPassReverse / http://localhost:9105/
+
+  ErrorLog /data/logs/apache/ticketing-preprod-error.log
+  CustomLog /data/logs/apache/ticketing-preprod-access.log combined
+
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName onevision-preprod.adm.fr.clara.net
+    ServerAlias ticketing-preprod.adm.fr.clara.net
+    ServerAlias 100.64.5.7
+
+	RewriteEngine On
+	RewriteCond %{REQUEST_URI}  ^/socket.io            [NC]
+	RewriteCond %{QUERY_STRING} transport=websocket    [NC]
+	RewriteRule /(.*)           ws://localhost:9105/$1 [P,L]
+
+	ProxyPass / http://localhost:9105/ retry=1 connectiontimeout=5 timeout=15
+	ProxyPassReverse / http://localhost:9105/
+
+	SSLEngine On
+    SSLCertificateFile /etc/apache2/ssl/wildcard.adm.fr.clara.net.cer
+    SSLCertificateKeyFile /etc/apache2/ssl/wildcard.adm.fr.clara.net.key
+    SSLCertificateChainFile /etc/apache2/ssl/wildcard.adm.fr.clara.net.chain
+    SSLProtocol all -SSLv2
+
+    ErrorLog /data/logs/apache/ticketing-preprod-error.log
+    CustomLog /data/logs/apache/ticketing-preprod-access.log combined
+</VirtualHost>
+
+
+
